@@ -163,9 +163,9 @@ export async function generatePDF(formData, signatures) {
   
   // Health & Safety (highlight Selection)
   if (formData.hasHealthIssues === 'Yes') {
-    drawHighlight(2, 358, 208, 18, 10); 
+    drawHighlight(2, 376, 208, 18, 10); 
   } else if (formData.hasHealthIssues === 'No') {
-    drawHighlight(2, 386, 208, 15, 10);
+    drawHighlight(2, 398, 208, 15, 10);
   }
   drawText(2, formData.healthIssuesSpecify, 160, 181);
   
