@@ -111,9 +111,9 @@ export async function generatePDF(formData, signatures) {
   
   // Passport (highlight Selection)
   if (formData.passportType === 'British') {
-    drawHighlight(2, 98, 520, 34, 12);
+    drawHighlight(2, 94, 522, 30, 10);
   } else if (formData.passportType === 'Other') {
-    drawHighlight(2, 142, 520, 28, 12);
+    drawHighlight(2, 128, 522, 25, 10);
   }
   
   drawText(2, formData.passportNumber, 280, 526);
@@ -123,9 +123,9 @@ export async function generatePDF(formData, signatures) {
   
   // Right to Work (highlight Selection)
   if (formData.rightToWork === 'Yes') {
-    drawHighlight(2, 231, 471, 20, 12);
+    drawHighlight(2, 228, 473, 18, 10);
   } else if (formData.rightToWork === 'No') {
-    drawHighlight(2, 254, 471, 16, 12);
+    drawHighlight(2, 248, 473, 15, 10);
   }
   
   drawText(2, formData.rightToWorkRef, 375, 486);
@@ -163,9 +163,9 @@ export async function generatePDF(formData, signatures) {
   
   // Health & Safety (highlight Selection)
   if (formData.hasHealthIssues === 'Yes') {
-    drawHighlight(2, 398, 206, 20, 12); 
+    drawHighlight(2, 368, 208, 18, 10); 
   } else if (formData.hasHealthIssues === 'No') {
-    drawHighlight(2, 422, 206, 16, 12);
+    drawHighlight(2, 386, 208, 15, 10);
   }
   drawText(2, formData.healthIssuesSpecify, 160, 181);
   
@@ -178,9 +178,9 @@ export async function generatePDF(formData, signatures) {
   
   // Criminal Record (highlight Selection)
   if (formData.hasCriminalConvictions === 'Yes') {
-    drawHighlight(3, 234, 586, 20, 12); 
+    drawHighlight(3, 230, 588, 18, 10); 
   } else if (formData.hasCriminalConvictions === 'No') {
-    drawHighlight(3, 257, 586, 16, 12);
+    drawHighlight(3, 249, 588, 15, 10);
   }
   
   // Convictions Table (up to 3 rows)
