@@ -25,17 +25,17 @@ export async function generatePDF(formData, signatures) {
     });
   };
 
-  // Helper to draw a red circle indicating a choice
-  const drawSelectionCircle = (pageNumber, x, y, r = 8) => {
+  // Helper to draw a yellow highlight indicating a choice
+  const drawHighlight = (pageNumber, x, y, width, height) => {
     if (pageNumber < 1 || pageNumber > pages.length) return;
     const page = pages[pageNumber - 1];
-    page.drawCircle({
+    page.drawRectangle({
       x,
-      y,
-      size: r,
-      borderWidth: 1.5,
-      borderColor: rgb(0.85, 0.15, 0.15),
-      opacity: 0.9,
+      y: y - 2, // offset baseline slightly
+      width,
+      height,
+      color: rgb(1, 0.9, 0), // bright yellow
+      opacity: 0.45,
     });
   };
 
@@ -109,11 +109,11 @@ export async function generatePDF(formData, signatures) {
   }
   drawText(2, formData.postcode, 475, 558);
   
-  // Passport (circle Selection)
+  // Passport (highlight Selection)
   if (formData.passportType === 'British') {
-    drawSelectionCircle(2, 108, 524, 9); // Circle "British"
+    drawHighlight(2, 98, 520, 34, 12);
   } else if (formData.passportType === 'Other') {
-    drawSelectionCircle(2, 150, 524, 9); // Circle "Other"
+    drawHighlight(2, 142, 520, 28, 12);
   }
   
   drawText(2, formData.passportNumber, 280, 526);
@@ -121,11 +121,11 @@ export async function generatePDF(formData, signatures) {
   drawText(2, formData.nationality, 110, 503);
   drawText(2, formData.countryOfIssue, 375, 503);
   
-  // Right to Work (circle Selection)
+  // Right to Work (highlight Selection)
   if (formData.rightToWork === 'Yes') {
-    drawSelectionCircle(2, 278, 475, 9);
+    drawHighlight(2, 231, 471, 20, 12);
   } else if (formData.rightToWork === 'No') {
-    drawSelectionCircle(2, 298, 475, 9);
+    drawHighlight(2, 254, 471, 16, 12);
   }
   
   drawText(2, formData.rightToWorkRef, 375, 486);
@@ -161,11 +161,11 @@ export async function generatePDF(formData, signatures) {
   drawText(2, formData.emergency2Contact, 130, 300);
   drawText(2, formData.emergency2Relationship, 350, 300);
   
-  // Health & Safety (circle Selection)
+  // Health & Safety (highlight Selection)
   if (formData.hasHealthIssues === 'Yes') {
-    drawSelectionCircle(2, 462, 210, 9); 
+    drawHighlight(2, 398, 206, 20, 12); 
   } else if (formData.hasHealthIssues === 'No') {
-    drawSelectionCircle(2, 485, 210, 9);
+    drawHighlight(2, 422, 206, 16, 12);
   }
   drawText(2, formData.healthIssuesSpecify, 160, 181);
   
@@ -176,11 +176,11 @@ export async function generatePDF(formData, signatures) {
   // PAGE 3: CRIMINAL RECORD & QUALIFICATIONS
   // ==========================================
   
-  // Criminal Record (circle Selection)
+  // Criminal Record (highlight Selection)
   if (formData.hasCriminalConvictions === 'Yes') {
-    drawSelectionCircle(3, 242, 590, 9); 
+    drawHighlight(3, 234, 586, 20, 12); 
   } else if (formData.hasCriminalConvictions === 'No') {
-    drawSelectionCircle(3, 265, 590, 9);
+    drawHighlight(3, 257, 586, 16, 12);
   }
   
   // Convictions Table (up to 3 rows)
