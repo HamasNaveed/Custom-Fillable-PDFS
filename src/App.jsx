@@ -210,17 +210,17 @@ export default function App() {
   const handleClearSignature = (padName, sigRef) => {
     if (sigRef.current) {
       sigRef.current.clear();
-      setSignatures((prev) => {
-        const next = { ...prev, [padName]: null };
-        if (applySignatureToAll) {
-          next.training = null;
-          next.handbook = null;
-          next.tooling = null;
-          next.declaration = null;
-        }
-        return next;
-      });
     }
+    setSignatures((prev) => {
+      const next = { ...prev, [padName]: null };
+      if (applySignatureToAll) {
+        next.training = null;
+        next.handbook = null;
+        next.tooling = null;
+        next.declaration = null;
+      }
+      return next;
+    });
   };
 
   // Handle checking the single signature checkbox

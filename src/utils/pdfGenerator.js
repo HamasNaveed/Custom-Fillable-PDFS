@@ -111,9 +111,9 @@ export async function generatePDF(formData, signatures) {
   
   // Passport (circle Selection)
   if (formData.passportType === 'British') {
-    drawSelectionCircle(2, 115, 523, 9); // Circle "British"
+    drawSelectionCircle(2, 108, 524, 9); // Circle "British"
   } else if (formData.passportType === 'Other') {
-    drawSelectionCircle(2, 160, 523, 9); // Circle "Other"
+    drawSelectionCircle(2, 150, 524, 9); // Circle "Other"
   }
   
   drawText(2, formData.passportNumber, 280, 526);
@@ -123,9 +123,9 @@ export async function generatePDF(formData, signatures) {
   
   // Right to Work (circle Selection)
   if (formData.rightToWork === 'Yes') {
-    drawSelectionCircle(2, 237, 474, 9);
+    drawSelectionCircle(2, 278, 475, 9);
   } else if (formData.rightToWork === 'No') {
-    drawSelectionCircle(2, 258, 474, 9);
+    drawSelectionCircle(2, 298, 475, 9);
   }
   
   drawText(2, formData.rightToWorkRef, 375, 486);
@@ -163,9 +163,9 @@ export async function generatePDF(formData, signatures) {
   
   // Health & Safety (circle Selection)
   if (formData.hasHealthIssues === 'Yes') {
-    drawSelectionCircle(2, 290, 209, 9); // Yes / No is near Yes / No (circle) text
+    drawSelectionCircle(2, 462, 210, 9); 
   } else if (formData.hasHealthIssues === 'No') {
-    drawSelectionCircle(2, 311, 209, 9);
+    drawSelectionCircle(2, 485, 210, 9);
   }
   drawText(2, formData.healthIssuesSpecify, 160, 181);
   
@@ -178,11 +178,9 @@ export async function generatePDF(formData, signatures) {
   
   // Criminal Record (circle Selection)
   if (formData.hasCriminalConvictions === 'Yes') {
-    drawSelectionCircle(2, 240, 589, 9); // Wait! Let's double check if it is page 3
-    drawSelectionCircle(3, 240, 589, 9); 
+    drawSelectionCircle(3, 242, 590, 9); 
   } else if (formData.hasCriminalConvictions === 'No') {
-    drawSelectionCircle(2, 258, 589, 9);
-    drawSelectionCircle(3, 258, 589, 9);
+    drawSelectionCircle(3, 265, 590, 9);
   }
   
   // Convictions Table (up to 3 rows)
