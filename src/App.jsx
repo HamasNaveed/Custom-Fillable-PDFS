@@ -288,6 +288,65 @@ export default function App() {
     }
   };
 
+  // Auto fill dummy data for testing
+  const handleAutoFill = () => {
+    setHasReadIntro(true);
+    setFormData({
+      title: 'Mr',
+      firstName: 'Hamas',
+      lastName: 'Naveed',
+      dob: '1995-06-15',
+      gender: 'Male',
+      contactNumber: '03426311226',
+      nationalInsurance: '3452345345345',
+      homeAddress: 'Rawalpindi Askari 14',
+      postcode: '00066',
+
+      passportType: 'Other',
+      passportNumber: '23453425',
+      passportExpiry: '2026-07-11',
+      nationality: '345234',
+      countryOfIssue: '4325',
+      rightToWork: 'No',
+      rightToWorkRef: '23452345',
+      rightToWorkCheckDate: '2026-06-16',
+
+      emergency1Title: 'Mrs',
+      emergency1FirstName: 'Jane',
+      emergency1LastName: 'Smith',
+      emergency1Address: '123 High Street, London',
+      emergency1Postcode: 'SW1A 1AA',
+      emergency1Contact: '07777777778',
+      emergency1Relationship: 'Spouse',
+
+      emergency2Title: 'Mr',
+      emergency2FirstName: 'Ali',
+      emergency2LastName: 'Naveed',
+      emergency2Address: '456 West Road, Surrey',
+      emergency2Postcode: 'GU1 1AA',
+      emergency2Contact: '07777777779',
+      emergency2Relationship: 'Brother',
+
+      hasHealthIssues: 'No',
+      healthIssuesSpecify: '',
+      healthAdjustments: 'No adjustments needed.',
+
+      hasCriminalConvictions: 'No',
+      convictions: [
+        { offenceDates: '', convictionDates: '', sentences: '' }
+      ],
+
+      qualifications: [
+        { type: 'CSCS Card', dateObtained: '10/10/2024', dateExpiry: '10/10/2029' }
+      ],
+
+      printedName1: 'Hamas Naveed',
+      dateSign1: new Date().toISOString().split('T')[0],
+      printedName2: 'Hamas Naveed',
+      dateSign2: new Date().toISOString().split('T')[0]
+    });
+  };
+
   // Reset form
   const handleReset = () => {
     setSuccess(false);
@@ -326,6 +385,14 @@ export default function App() {
       <header className="header">
         <h1>MJM Industrial Ltd</h1>
         <p>Sub-Contractor Registration Portal</p>
+        <button 
+          type="button"
+          onClick={handleAutoFill}
+          className="btn btn-secondary"
+          style={{ marginTop: '1.25rem', padding: '0.5rem 1.25rem', fontSize: '0.85rem', background: 'rgba(99, 102, 241, 0.15)', borderColor: 'rgba(99, 102, 241, 0.3)' }}
+        >
+          ⚡ Auto Fill Dummy Data (Testing)
+        </button>
       </header>
 
       {/* Steps Indicator */}
