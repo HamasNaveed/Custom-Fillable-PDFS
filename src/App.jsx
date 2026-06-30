@@ -17,17 +17,20 @@ import {
   AlertTriangle,
   HeartPulse,
   Stamp,
-  FileCheck
+  FileCheck,
+  Building,
+  Info
 } from 'lucide-react';
 import { generatePDF } from './utils/pdfGenerator';
 
 const STEPS = [
-  { id: 1, name: 'Personal Details', icon: User },
-  { id: 2, name: 'Passport & RTW', icon: Stamp },
-  { id: 3, name: 'Emergency Contacts', icon: Phone },
-  { id: 4, name: 'Health & Criminal Check', icon: HeartPulse },
-  { id: 5, name: 'Qualifications', icon: Award },
-  { id: 6, name: 'Signatures & Submit', icon: PenTool }
+  { id: 1, name: 'Introduction', icon: Info },
+  { id: 2, name: 'Personal Details', icon: User },
+  { id: 3, name: 'Passport & RTW', icon: Stamp },
+  { id: 4, name: 'Emergency Contacts', icon: Phone },
+  { id: 5, name: 'Health & Criminal Check', icon: HeartPulse },
+  { id: 6, name: 'Qualifications', icon: Award },
+  { id: 7, name: 'Signatures & Submit', icon: PenTool }
 ];
 
 export default function App() {
@@ -116,6 +119,9 @@ export default function App() {
 
   // Single signature apply option
   const [applySignatureToAll, setApplySignatureToAll] = useState(false);
+
+  // Introduction Read Checkbox State
+  const [hasReadIntro, setHasReadIntro] = useState(false);
 
   // Input change handler
   const handleInputChange = (e) => {
@@ -224,7 +230,6 @@ export default function App() {
     
     // If turning on and we have any signature, sync it to all
     if (checked) {
-      // Find the first signature that has been signed
       const sourceSig = signatures.declaration || signatures.training || signatures.handbook || signatures.tooling;
       if (sourceSig) {
         setSignatures({
@@ -239,6 +244,10 @@ export default function App() {
 
   // Next / Back Navigation
   const handleNext = () => {
+    if (activeStep === 1 && !hasReadIntro) {
+      alert('Please check the box confirming you have read the Introduction and Policy before moving forward.');
+      return;
+    }
     setActiveStep((prev) => Math.min(prev + 1, STEPS.length));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -284,6 +293,7 @@ export default function App() {
     setSuccess(false);
     setPdfBlobUrl(null);
     setActiveStep(1);
+    setHasReadIntro(false);
     setSignatures({
       training: null,
       handbook: null,
@@ -332,7 +342,14 @@ export default function App() {
             <div 
               key={step.id} 
               className={`step-node ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}`}
-              onClick={() => !success && setActiveStep(step.id)}
+              onClick={() => {
+                if (success) return;
+                if (step.id > 1 && !hasReadIntro) {
+                  alert('Please check the box confirming you have read the Introduction and Policy before moving forward.');
+                  return;
+                }
+                setActiveStep(step.id);
+              }}
             >
               <div className="step-circle">
                 {isCompleted ? <FileCheck size={18} /> : <Icon size={18} />}
@@ -365,8 +382,83 @@ export default function App() {
         ) : (
           <form onSubmit={handleSubmit}>
             
-            {/* STEP 1: PERSONAL DETAILS */}
+            {/* STEP 1: WELCOME & INTRODUCTION TEXTS */}
             {activeStep === 1 && (
+              <div className="pdf-info-container">
+                <h3 className="form-section-title"><Building size={20} /> Introduction to MJM Industrial Ltd</h3>
+                
+                <div className="pdf-intro-section">
+                  <p className="pdf-text-p">
+                    <strong>MJM Industrial Ltd</strong> was started in April 2000, we provide tailored mechanical, electrical and civil engineering solutions with the professional expertise, customer service and support you need 24 hours a day 7 days a week. MJM hold an Airside Operator License, with a large team of trained Airside passed personnel with a fleet of vehicles working 5 minutes from Heathrow Terminal 5.
+                  </p>
+                  
+                  <p className="pdf-text-p">
+                    MJM Industrial is a well-established business with a reputation for the delivery of reliable and flexible services that are underpinned by first-class customer support.
+                  </p>
+                  
+                  <p className="pdf-text-p" style={{ fontWeight: '500', marginBottom: '0.75rem' }}>
+                    We operate from five divisions, offering from one to a total engineering package:
+                  </p>
+                  
+                  <div className="division-grid">
+                    <div className="division-badge-card">
+                      <h4>PRO Division</h4>
+                      <p>Engineering component sales, repair and overhaul to industry.</p>
+                    </div>
+                    <div className="division-badge-card">
+                      <h4>CES Division</h4>
+                      <p>Outsourced maintenance services, contract engineering.</p>
+                    </div>
+                    <div className="division-badge-card">
+                      <h4>ELE Division</h4>
+                      <p>Electrical projects and installation.</p>
+                    </div>
+                    <div className="division-badge-card">
+                      <h4>FAB Division</h4>
+                      <p>Fabrication and machining workshop.</p>
+                    </div>
+                    <div className="division-badge-card">
+                      <h4>RMP Division</h4>
+                      <p>Refurbishment and maintenance projects.</p>
+                    </div>
+                  </div>
+
+                  <p className="pdf-text-p">
+                    MJM Industrial operates in a range of industries including: Food and drink manufacture and process, Airport, Breweries, Construction, Quarry, Property maintenance, Film and Leisure, and PR, Marketing and Exhibitions.
+                  </p>
+                  
+                  <p className="pdf-text-p">
+                    <strong>Our Vision:</strong> To become the No.1 service provider of choice to tier 1 customers at Heathrow, aligning our products and services with Heathrow’s vision to give passengers the best airport service in the world.
+                  </p>
+                </div>
+
+                <div className="policy-block">
+                  <h4>Equal Opportunities Policy</h4>
+                  <p>
+                    MJM Industrial is a company that takes its commitment to equal opportunities very seriously. They believe that everyone deserves to be treated fairly and with respect, regardless of their gender, sexual orientation, gender identity, marital status, age, disability, race, religion, or any other characteristic.
+                  </p>
+                  <p style={{ marginTop: '0.75rem' }}>
+                    To ensure that this policy is upheld, they will regularly review all aspects of their recruitment process to prevent any form of discrimination. Additionally, they expect all their staff to follow this policy and treat every applicant equally. They will not discriminate when deciding which sub-contractor worker to submit for a vacancy or assignment, or in any terms of employment or engagement for temporary workers. They will evaluate each contractor based on their merits, qualifications, and ability to perform the duties required for the job, and nothing else. Overall, MJM Industrial is committed to creating an inclusive and welcoming environment where everyone has an equal chance to succeed.
+                  </p>
+                </div>
+                
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '2rem', padding: '1.25rem', background: 'rgba(99, 102, 241, 0.08)', borderRadius: '0.75rem', border: '1px dashed rgba(99, 102, 241, 0.25)' }}>
+                  <input 
+                    type="checkbox" 
+                    id="readIntro" 
+                    checked={hasReadIntro} 
+                    onChange={(e) => setHasReadIntro(e.target.checked)} 
+                    style={{ width: '1.3rem', height: '1.3rem', accentColor: 'var(--primary)', cursor: 'pointer' }} 
+                  />
+                  <label htmlFor="readIntro" style={{ color: 'white', fontWeight: '600', cursor: 'pointer', fontSize: '0.95rem' }}>
+                    I have read and agree to the MJM Introduction, Vision, and Equal Opportunities Policy.
+                  </label>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 2: PERSONAL DETAILS */}
+            {activeStep === 2 && (
               <div>
                 <h3 className="form-section-title"><User size={20} /> Personal Details</h3>
                 <div className="form-grid">
@@ -474,10 +566,17 @@ export default function App() {
               </div>
             )}
 
-            {/* STEP 2: PASSPORT & RIGHT TO WORK */}
-            {activeStep === 2 && (
+            {/* STEP 3: PASSPORT & RIGHT TO WORK */}
+            {activeStep === 3 && (
               <div>
                 <h3 className="form-section-title"><Stamp size={20} /> Passport & Right To Work Check</h3>
+                
+                <div className="policy-block" style={{ borderLeftColor: 'var(--secondary)', background: 'rgba(6, 182, 212, 0.03)', marginTop: '0', marginBottom: '1.5rem', padding: '1rem 1.25rem' }}>
+                  <p style={{ fontSize: '0.85rem' }}>
+                    <strong>Passport Policy:</strong> If not a British Passport holder – Please circle. Do you have the Right to work in the UK: Yes/No. Ensure all details match your official documents.
+                  </p>
+                </div>
+
                 <div className="form-grid">
                   <div className="form-group col-6">
                     <label>Passport Type <span className="required">*</span></label>
@@ -602,8 +701,8 @@ export default function App() {
               </div>
             )}
 
-            {/* STEP 3: EMERGENCY CONTACTS */}
-            {activeStep === 3 && (
+            {/* STEP 4: EMERGENCY CONTACTS */}
+            {activeStep === 4 && (
               <div>
                 {/* Emergency Contact 1 */}
                 <h3 className="form-section-title"><Phone size={20} /> Emergency Contact 1</h3>
@@ -773,14 +872,19 @@ export default function App() {
               </div>
             )}
 
-            {/* STEP 4: HEALTH & CRIMINAL CHECKS */}
-            {activeStep === 4 && (
+            {/* STEP 5: HEALTH & CRIMINAL CHECKS */}
+            {activeStep === 5 && (
               <div>
                 <h3 className="form-section-title"><HeartPulse size={20} /> Health and Safety</h3>
+                
+                <p className="pdf-text-p" style={{ fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+                  <strong>Health and disability:</strong> These questions are asked in order to find out your needs in terms of access to our services and to find out your needs in order for MJM Industrial to place you in the correct role.
+                </p>
+
                 <div className="form-grid" style={{ marginBottom: '2.5rem' }}>
                   <div className="form-group col-12">
                     <label style={{ fontSize: '0.95rem' }}>
-                      Do you have any health issues or disabilities which could affect the project you work on? <span className="required">*</span>
+                      Do you have any health issues or disabilities which could affect the project you work on? Yes / No (circle) <span className="required">*</span>
                     </label>
                     <div className="radio-group" style={{ maxWidth: '300px', marginTop: '0.5rem' }}>
                       <label className="radio-card">
@@ -834,15 +938,25 @@ export default function App() {
                 </div>
 
                 <h3 className="form-section-title"><ShieldAlert size={20} /> Criminal Record Check</h3>
+                
+                <div className="policy-block" style={{ borderLeftColor: 'var(--warning)', background: 'rgba(245, 158, 11, 0.03)', marginTop: '0', marginBottom: '1.5rem', padding: '1.25rem' }}>
+                  <p style={{ fontSize: '0.85rem', lineHeight: '1.55' }}>
+                    We are asking you to complete this section in relation to job roles which are not exempt from the Rehabilitation of Offenders Act 1974. For this reason, you are only required to disclose information about unspent convictions. You are not required to disclose spent convictions on this form.
+                  </p>
+                  <p style={{ fontSize: '0.85rem', lineHeight: '1.55', marginTop: '0.5rem' }}>
+                    Additionally, you are not required to declare any information about ‘protected’ offenses – (offenses to which the filtering rules apply). If you are unsure as to whether a conviction is unspent/spent or protected(filtered) please see the additional guidance at <a href="https://www.gov.uk/exoffenders-and-employment" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--secondary)', textDecoration: 'underline' }}>https://www.gov.uk/exoffenders-and-employment</a> , or you can contact organisations such as NACRO or Unlock for further information.
+                  </p>
+                  <p style={{ fontSize: '0.85rem', lineHeight: '1.55', marginTop: '0.5rem' }}>
+                    If you wish to be put forward for/if any role is identified which may be suitable for you but which is exempt from the Rehabilitation of Offenders Act 1974, meaning that you are required to disclose spent convictions, we will ask you to complete an additional criminal disclosure form. You are not required to complete that additional form if you do not wish to be put forward for that type of work.
+                  </p>
+                </div>
+
                 <div className="form-grid">
                   <div className="form-group col-12">
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem', lineHeight: '1.4' }}>
-                      We are asking you to complete this section in relation to job roles which are not exempt from the Rehabilitation of Offenders Act 1974. For this reason, you are only required to disclose information about unspent convictions.
-                    </p>
                     <label style={{ fontSize: '0.95rem' }}>
-                      Do you have any unspent criminal convictions? <span className="required">*</span>
+                      Do you have any unspent criminal convictions? Yes/No (Please circle) <span className="required">*</span>
                     </label>
-                    <div className="radio-group" style={{ maxWidth: '300px', marginTop: '0.5rem', marginBottom: '1rem' }}>
+                    <div className="radio-group" style={{ maxWidth: '300px', marginTop: '0.5rem', marginBottom: '1.5rem' }}>
                       <label className="radio-card">
                         <input 
                           type="radio" 
@@ -869,7 +983,7 @@ export default function App() {
 
                   {formData.hasCriminalConvictions === 'Yes' && (
                     <div className="form-group col-12">
-                      <label style={{ marginBottom: '0.5rem' }}>Provide details of unspent convictions (Up to 3):</label>
+                      <label style={{ marginBottom: '0.5rem' }}>Provide details of unspent convictions (Up to 3): (You are not required to provide any information about protected [filtered] offenses)</label>
                       <div className="table-container">
                         <table>
                           <thead>
@@ -935,23 +1049,28 @@ export default function App() {
                       )}
                     </div>
                   )}
+                  
+                  <div className="footnote-block col-12">
+                    <strong>(NB:</strong> Certain types of employment and professions are exempt from the Rehabilitation of Offenders Act 1974 and in those cases particularly where the employment is sought in relation to positions involving working with children or vulnerable adults, details of all criminal convictions must be given. The information given will be treated in the strictest of confidence and only considered where, in the reasonable opinion of MJM Industrial if the offence is relevant to the post to which you are applying. Failure to declare a conviction may require us to exclude you from our register or terminate an assignment if the offence is not declared but later comes to light).
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* STEP 5: QUALIFICATIONS */}
-            {activeStep === 5 && (
+            {/* STEP 6: QUALIFICATIONS */}
+            {activeStep === 6 && (
               <div>
                 <h3 className="form-section-title"><Award size={20} /> Qualifications</h3>
-                <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-                  Insert details of any relevant Professional qualifications you hold (e.g. ESR, CSCS, ASD, etc.) (Up to 10):
+                
+                <p className="pdf-text-p" style={{ fontSize: '0.9rem', marginBottom: '1.5rem' }}>
+                  <strong>Qualifications:</strong> Insert details of any relevant Professional qualifications you hold. (Qualification Type e.g., ESR; CSCS; ASD, etc.)
                 </p>
 
                 <div className="table-container">
                   <table>
                     <thead>
                       <tr>
-                        <th>Qualification Type</th>
+                        <th>Qualification Type (ESR; CSCS; ASD, etc)</th>
                         <th>Date Obtained</th>
                         <th>Date of Expiry</th>
                         <th style={{ width: '50px' }}></th>
@@ -1014,8 +1133,8 @@ export default function App() {
               </div>
             )}
 
-            {/* STEP 6: AGREEMENTS & SIGNATURES */}
-            {activeStep === 6 && (
+            {/* STEP 7: AGREEMENTS & SIGNATURES */}
+            {activeStep === 7 && (
               <div>
                 <h3 className="form-section-title"><PenTool size={20} /> Policies Acceptance & Contractor Sign-Off</h3>
 
@@ -1024,11 +1143,26 @@ export default function App() {
                   
                   {/* 1. Subcontractor training acceptance */}
                   <div className="policy-card">
-                    <h4>1. Sub-Contractor Training Agreement</h4>
-                    <p>
-                      I confirm that should I require any training whilst contracting for MJM Industrial, all training costs will be borne by me. If I leave or end my contract, I agree that MJM Industrial has the right to deduct any outstanding upfront training costs from my final invoice amount.
+                    <h4>1. Sub-Contractor Training</h4>
+                    <p style={{ marginBottom: '0.5rem', fontSize: '0.85rem', lineHeight: '1.5' }}>
+                      Should you require any training whilst contracting for MJM Industrial all training costs will be borne by you the contractor. If you leave or choose to end your contract with MJM Industrial Limited at any time, for any reason, including dismissal, the training costs will need to be repaid by you the contractor.
                     </p>
-                    <div className="form-grid" style={{ marginBottom: '1rem' }}>
+                    <p style={{ marginBottom: '0.5rem', fontSize: '0.85rem', lineHeight: '1.5' }}>
+                      MJM Industrial are willing to assist with training costs by making the initial payment upfront. However, you the subcontractor will need to repay MJM Industrial in full in one of the following ways:
+                    </p>
+                    <ul className="list-styled" style={{ marginBottom: '0.75rem' }}>
+                      <li>Upfront payment from the contractor at the start of the contract OR</li>
+                      <li>100% payment in full/ week 1-4 or 1st month of working OR</li>
+                      <li>12.5% per week or 50% per month up to 2 months</li>
+                    </ul>
+                    <p style={{ marginBottom: '1rem', fontSize: '0.85rem', lineHeight: '1.5' }}>
+                      In the event of failure to pay, I agree that MJM Industrial Limited has the right as an express term of my Sub Contract Terms to deduct any outstanding amount due under this agreement from my final invoice amount or any other payments due to me on the termination of my contract in accordance with the legislation currently in force.
+                    </p>
+                    <p style={{ fontWeight: '600', color: 'white', marginBottom: '1rem', fontSize: '0.9rem' }}>
+                      I hereby confirm that I accept the above information.
+                    </p>
+
+                    <div className="form-grid" style={{ marginBottom: '0' }}>
                       <div className="form-group col-6">
                         <label>Printed Name <span className="required">*</span></label>
                         <input 
@@ -1054,27 +1188,32 @@ export default function App() {
 
                   {/* 2. Handbook Policies acceptance */}
                   <div className="policy-card">
-                    <h4>2. Handbook, Policies, and Manuals Acceptance</h4>
-                    <p>
-                      I confirm that I have read and understood the Handbook, Policies and Risk Assessments provided. I fully accept and agree to comply with the rules and conditions outlined in these documents.
+                    <h4>2. Acceptance Handbook Policies Risk Assessment and Manuals</h4>
+                    <p style={{ fontSize: '0.85rem', lineHeight: '1.5' }}>
+                      I confirm that I have read and understood the Handbook, Policies and Risk Assessments provided. I fully accept and agree to comply with the rules and conditions outlined in these documents and acknowledge that adherence to them forms an integral part of my contract. Furthermore, I recognise my obligation to stay up to date with any updates or changes that may be made to these documents and will make every effort to remain informed of their contents. I am committed to upholding the high standards of excellence expected of me as a member of the MJM Industrial Limited team.
                     </p>
                   </div>
 
                   {/* 3. Tooling Requirements acceptance */}
                   <div className="policy-card">
                     <h4>3. Tooling Requirements</h4>
-                    <p>
-                      I acknowledge and accept my responsibility to provide and maintain all tooling relevant to the project and my area of expertise.
+                    <p style={{ fontSize: '0.85rem', lineHeight: '1.5' }}>
+                      As a skilled tradesperson contracted by MJM Industrial, I acknowledge and accept my responsibility to provide and maintain all tooling relevant to the project and my area of expertise. This includes, but is not limited to, hand and power tools, measuring equipment, and any other specialized tools required for the job. I understand that failure to provide and maintain these tools to the appropriate standard could result in delays or other issues that could impact project timelines and budgets. Furthermore, I commit to promptly informing MJM Industrial of any requirements for additional specialist tooling that may be needed throughout the project, ensuring that I have the necessary resources to complete my work to the highest possible standard.
                     </p>
                   </div>
 
                   {/* 4. Contractor Declaration */}
                   <div className="policy-card">
                     <h4>4. Contractor Declaration</h4>
-                    <p>
-                      I hereby confirm that the information given on this form is true and correct.
+                    <h5 style={{ color: 'var(--secondary)', fontSize: '0.9rem', marginBottom: '0.25rem', fontFamily: 'Outfit' }}>Data Protection Statement</h5>
+                    <p style={{ marginBottom: '0.75rem', fontSize: '0.85rem', lineHeight: '1.5' }}>
+                      MJM Industrial must process personal data (including sensitive personal data) in doing so, we act as a data controller. Therefore, we have asked for your personal data on this form. When we process your personal data, we must do so in accordance with data protection laws. Those laws require us to give you a Privacy Statement to explain how we manage your personal data. Please see the Privacy Statement which we will give to you separately.
                     </p>
-                    <div className="form-grid" style={{ marginBottom: '0rem' }}>
+                    <p style={{ fontWeight: '600', color: 'white', marginBottom: '1rem', fontSize: '0.9rem' }}>
+                      I hereby confirm that the information given is true and correct.
+                    </p>
+
+                    <div className="form-grid" style={{ marginBottom: '0' }}>
                       <div className="form-group col-6">
                         <label>Printed Name <span className="required">*</span></label>
                         <input 
