@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import SignatureCanvas from 'react-signature-canvas';
 import { 
   User, 
@@ -122,6 +122,45 @@ export default function App() {
 
   // Introduction Read Checkbox State
   const [hasReadIntro, setHasReadIntro] = useState(false);
+
+  // Parse contractor query parameter from URL on startup
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const rawData = params.get('data');
+      
+      if (rawData) {
+        const parsedData = JSON.parse(rawData);
+        const contractor = Array.isArray(parsedData) ? parsedData[0] : parsedData;
+        
+        setFormData((prev) => {
+          const updated = {
+            ...prev,
+            title: contractor.Title || prev.title,
+            firstName: contractor.GivenName || prev.firstName,
+            lastName: contractor.FamilyName || prev.lastName,
+            contactNumber: contractor.Phone || contractor.CellPhone || prev.contactNumber,
+            homeAddress: contractor.Address
+              ? `${contractor.Address.Address || ''}, ${contractor.Address.City || ''}`
+                  .replace(/\r\n/g, ', ')
+                  .trim()
+              : prev.homeAddress,
+            postcode: contractor.Address?.PostalCode || prev.postcode,
+          };
+
+          // Auto-populate print names for signature section
+          const fullName = `${updated.firstName} ${updated.lastName}`.trim();
+          if (fullName) {
+            updated.printedName1 = fullName;
+            updated.printedName2 = fullName;
+          }
+          return updated;
+        });
+      }
+    } catch (err) {
+      console.error("Failed to parse contractor URL data string:", err);
+    }
+  }, []);
 
   // Input change handler
   const handleInputChange = (e) => {
