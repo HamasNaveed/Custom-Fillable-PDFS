@@ -137,9 +137,12 @@ export default function App() {
           const parsedData = JSON.parse(rawData);
           const contractor = Array.isArray(parsedData) ? parsedData[0] : parsedData;
           
+          let titleVal = contractor.Title || updated.title;
+          if (titleVal) titleVal = titleVal.replace(/\.$/, '').trim();
+
           updated = {
             ...updated,
-            title: contractor.Title || updated.title,
+            title: titleVal,
             firstName: contractor.GivenName || updated.firstName,
             lastName: contractor.FamilyName || updated.lastName,
             contactNumber: contractor.Phone || contractor.CellPhone || updated.contactNumber,
@@ -152,9 +155,12 @@ export default function App() {
           };
         } else {
           // Parse direct flat URL parameters
+          let titleVal = params.get('title') || updated.title;
+          if (titleVal) titleVal = titleVal.replace(/\.$/, '').trim();
+
           updated = {
             ...updated,
-            title: params.get('title') || updated.title,
+            title: titleVal,
             firstName: params.get('firstName') || params.get('first_name') || params.get('givenName') || updated.firstName,
             lastName: params.get('lastName') || params.get('last_name') || params.get('familyName') || updated.lastName,
             contactNumber: params.get('contactNumber') || params.get('phone') || params.get('cellPhone') || updated.contactNumber,
