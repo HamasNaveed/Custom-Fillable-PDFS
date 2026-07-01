@@ -7,12 +7,13 @@ export async function generatePDF(formData, signatures) {
   
   const pdfDoc = await PDFDocument.load(pdfBytes);
   const pages = pdfDoc.getPages();
+  const form = pdfDoc.getForm();
   
-  // Standard fonts
+  // Standard fonts for fallback drawing
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
   
-  // Helper to draw text
+  // Helper to draw text (used as fallback for fields that aren't native inputs)
   const drawText = (pageNumber, text, x, y, size = 9, bold = false) => {
     if (!text || pageNumber < 1 || pageNumber > pages.length) return;
     const page = pages[pageNumber - 1];
@@ -22,20 +23,6 @@ export async function generatePDF(formData, signatures) {
       size,
       font: bold ? fontBold : font,
       color: rgb(0.1, 0.1, 0.1),
-    });
-  };
-
-  // Helper to draw a yellow highlight indicating a choice
-  const drawHighlight = (pageNumber, x, y, width, height) => {
-    if (pageNumber < 1 || pageNumber > pages.length) return;
-    const page = pages[pageNumber - 1];
-    page.drawRectangle({
-      x,
-      y: y - 2, // offset baseline slightly
-      width,
-      height,
-      color: rgb(1, 0.9, 0), // bright yellow
-      opacity: 0.45,
     });
   };
 
@@ -57,33 +44,40 @@ export async function generatePDF(formData, signatures) {
     }
   };
 
-  // Helper to split a long text into multiple lines for PDF drawing
-  const drawMultilineText = (pageNumber, text, x, startY, lineSpacing = 12.5, maxLines = 4, fontSize = 9) => {
-    if (!text) return;
-    const words = text.split(' ');
-    const lines = [];
-    let currentLine = '';
-    
-    // Estimate width limits (A4 page width is ~595pt, margins are ~56pt)
-    const maxWidth = 480; 
-    
-    for (let word of words) {
-      const testLine = currentLine ? currentLine + ' ' + word : word;
-      const width = font.widthOfTextAtSize(testLine, fontSize);
-      if (width > maxWidth) {
-        lines.push(currentLine);
-        currentLine = word;
-      } else {
-        currentLine = testLine;
-      }
+  // Helper to safely set interactive text field values
+  const setFieldText = (fieldName, value) => {
+    if (!value) return;
+    try {
+      const field = form.getTextField(fieldName);
+      field.setText(String(value));
+    } catch (e) {
+      console.warn(`Could not set text field "${fieldName}":`, e.message);
     }
-    if (currentLine) {
-      lines.push(currentLine);
-    }
+  };
 
-    // Draw lines
-    for (let i = 0; i < Math.min(lines.length, maxLines); i++) {
-      drawText(pageNumber, lines[i], x, startY - (i * lineSpacing), fontSize);
+  // Helper to safely select single-option radio fields
+  const selectRadio = (groupName, value) => {
+    try {
+      const group = form.getRadioGroup(groupName);
+      group.select(value);
+    } catch (e) {
+      console.warn(`Could not select radio group "${groupName}":`, e.message);
+    }
+  };
+
+  // Helper to parse dates into separate Day, Month, Year digit fields
+  const fillSplitDate = (dateStr, dayField, monthField, yearField) => {
+    if (!dateStr) return;
+    const parts = dateStr.split('-');
+    if (parts.length === 3) {
+      const year = parts[0].slice(-2); // e.g. "26" from "2026"
+      const month = parts[1];          // e.g. "07"
+      const day = parts[2];            // e.g. "01"
+      setFieldText(dayField, day);
+      setFieldText(monthField, month);
+      setFieldText(yearField, year);
+    } else {
+      setFieldText(dayField, dateStr);
     }
   };
 
@@ -92,136 +86,138 @@ export async function generatePDF(formData, signatures) {
   // ==========================================
   
   // Personal Details
-  drawText(2, formData.title, 85, 617);
-  drawText(2, formData.firstName, 270, 617);
-  drawText(2, formData.lastName, 430, 617);
-  drawText(2, formData.dob, 125, 600);
-  drawText(2, formData.gender, 340, 600);
-  drawText(2, formData.contactNumber, 130, 583);
-  drawText(2, formData.nationalInsurance, 410, 583);
+  setFieldText('text_1plff', formData.title);
+  setFieldText('text_2vfcv', formData.firstName);
+  setFieldText('text_3bqz', formData.lastName);
+  setFieldText('text_4uojm', formData.dob);
+  setFieldText('text_5djai', formData.gender);
+  setFieldText('text_6fyfs', formData.contactNumber);
+  setFieldText('text_7amgt', formData.nationalInsurance);
   
-  // Home Address (split into two fields if too long)
-  if (formData.homeAddress && formData.homeAddress.length > 50) {
-    drawText(2, formData.homeAddress.substring(0, 50), 130, 566);
-    drawText(2, formData.homeAddress.substring(50), 130, 549);
-  } else {
-    drawText(2, formData.homeAddress, 130, 566);
-  }
-  drawText(2, formData.postcode, 475, 558);
-  
-  // Passport (highlight Selection)
+  // Combined address and postcode in the main textarea
+  const fullAddress = `${formData.homeAddress || ''} ${formData.postcode || ''}`.trim();
+  setFieldText('textarea_15fdju', fullAddress);
+
+  // Passport (single-choice radio groups)
   if (formData.passportType === 'British') {
-    drawHighlight(2, 94, 522, 30, 10);
+    selectRadio('radio_group_10ypgf', 'Value_tdai');
   } else if (formData.passportType === 'Other') {
-    drawHighlight(2, 128, 522, 25, 10);
+    selectRadio('radio_group_11fpoa', 'Value_mdyo');
   }
-  
-  drawText(2, formData.passportNumber, 280, 526);
-  drawText(2, formData.passportExpiry, 430, 526);
-  drawText(2, formData.nationality, 110, 503);
-  drawText(2, formData.countryOfIssue, 375, 503);
-  
-  // Right to Work (highlight Selection)
+
+  setFieldText('text_12goot', formData.passportNumber);
+  setFieldText('text_16xrdh', formData.passportExpiry);
+  setFieldText('text_17dyln', formData.nationality);
+  setFieldText('text_18mxrq', formData.countryOfIssue);
+
+  // Right to work status (single-choice radio groups)
   if (formData.rightToWork === 'Yes') {
-    drawHighlight(2, 205, 473, 18, 10);
+    selectRadio('radio_group_20zfac', 'Value_eqju');
   } else if (formData.rightToWork === 'No') {
-    drawHighlight(2, 224, 473, 15, 10);
+    selectRadio('radio_group_21eubs', 'Value_zkfl');
   }
-  
-  drawText(2, formData.rightToWorkRef, 375, 486);
-  drawText(2, formData.rightToWorkCheckDate, 375, 469);
-  
+
+  setFieldText('text_19noig', formData.rightToWorkRef);
+  setFieldText('text_23xknv', formData.rightToWorkCheckDate);
+
   // Emergency Contact 1
-  drawText(2, formData.emergency1Title, 85, 435);
-  drawText(2, formData.emergency1FirstName, 270, 435);
-  drawText(2, formData.emergency1LastName, 430, 435);
-  
-  if (formData.emergency1Address && formData.emergency1Address.length > 50) {
-    drawText(2, formData.emergency1Address.substring(0, 50), 130, 418);
-    drawText(2, formData.emergency1Address.substring(50), 130, 401);
-  } else {
-    drawText(2, formData.emergency1Address, 130, 418);
-  }
-  drawText(2, formData.emergency1Postcode, 475, 410);
-  drawText(2, formData.emergency1Contact, 130, 385);
-  drawText(2, formData.emergency1Relationship, 350, 385);
-  
+  setFieldText('text_24biim', formData.emergency1Title);
+  setFieldText('text_25keiz', formData.emergency1FirstName);
+  setFieldText('text_26yast', formData.emergency1LastName);
+  setFieldText('textarea_27wng', formData.emergency1Address);
+  setFieldText('text_28gbcf', formData.emergency1Postcode);
+  setFieldText('text_29dsra', formData.emergency1Contact);
+  setFieldText('text_30rkzt', formData.emergency1Relationship);
+
   // Emergency Contact 2
-  drawText(2, formData.emergency2Title, 85, 351);
-  drawText(2, formData.emergency2FirstName, 270, 351);
-  drawText(2, formData.emergency2LastName, 430, 351);
-  
-  if (formData.emergency2Address && formData.emergency2Address.length > 50) {
-    drawText(2, formData.emergency2Address.substring(0, 50), 130, 334);
-    drawText(2, formData.emergency2Address.substring(50), 130, 317);
-  } else {
-    drawText(2, formData.emergency2Address, 130, 334);
-  }
-  drawText(2, formData.emergency2Postcode, 475, 325);
-  drawText(2, formData.emergency2Contact, 130, 300);
-  drawText(2, formData.emergency2Relationship, 350, 300);
-  
-  // Health & Safety (highlight Selection)
+  setFieldText('text_31wnsq', formData.emergency2Title);
+  setFieldText('text_32zuus', formData.emergency2FirstName);
+  setFieldText('text_33wjnn', formData.emergency2LastName);
+  setFieldText('textarea_34cdpm', formData.emergency2Address);
+  setFieldText('text_35xqpd', formData.emergency2Postcode);
+  setFieldText('text_36yavt', formData.emergency2Contact);
+  setFieldText('text_37iqmh', formData.emergency2Relationship);
+
+  // Health and safety selection
   if (formData.hasHealthIssues === 'Yes') {
-    drawHighlight(2, 376, 208, 18, 10); 
+    selectRadio('radio_group_38supt', 'Value_aefc');
+    // Draw specify text at coordinates (fallback since PDF field was not auto-detected)
+    drawText(2, formData.healthIssuesSpecify, 160, 181);
   } else if (formData.hasHealthIssues === 'No') {
-    drawHighlight(2, 398, 208, 15, 10);
+    selectRadio('radio_group_40hfcc', 'Value_qvwi');
   }
-  drawText(2, formData.healthIssuesSpecify, 160, 181);
-  
-  // Adjustments (Multiline, Y starts at 143)
-  drawMultilineText(2, formData.healthAdjustments, 60, 143, 12.6, 4);
+
+  setFieldText('textarea_41ljjc', formData.healthAdjustments);
 
   // ==========================================
   // PAGE 3: CRIMINAL RECORD & QUALIFICATIONS
   // ==========================================
-  
-  // Criminal Record (highlight Selection)
+
+  // Criminal convictions choice
   if (formData.hasCriminalConvictions === 'Yes') {
-    drawHighlight(3, 230, 588, 18, 10); 
+    selectRadio('radio_group_42ncfu', 'Value_rsri');
   } else if (formData.hasCriminalConvictions === 'No') {
-    drawHighlight(3, 249, 588, 15, 10);
+    selectRadio('radio_group_43djun', 'Value_qmpg');
   }
-  
-  // Convictions Table (up to 3 rows)
+
+  // Convictions Table
   const convictions = formData.convictions || [];
-  for (let i = 0; i < Math.min(convictions.length, 3); i++) {
+  // Row 0 has native form fields
+  if (convictions.length > 0) {
+    setFieldText('textarea_44uvjr', convictions[0].offenceDates);
+    setFieldText('text_45xtok', convictions[0].convictionDates);
+    setFieldText('textarea_46xorm', convictions[0].sentences);
+  }
+  // Row 1 & Row 2 do not have native form fields; draw manually
+  for (let i = 1; i < Math.min(convictions.length, 3); i++) {
     const rowY = 530 - (i * 15);
     drawText(3, convictions[i].offenceDates, 60, rowY);
     drawText(3, convictions[i].convictionDates, 185, rowY);
     drawText(3, convictions[i].sentences, 390, rowY);
   }
 
-  // Qualifications Table (up to 10 rows)
+  // Qualifications Table (mapped to all 10 row fields)
+  const qualFields = [
+    { type: 'text_47dhqv', obtained: 'text_58zlqx', expiry: 'text_61yese' },
+    { type: 'text_49ptfe', obtained: 'text_59byuv', expiry: 'text_69xhwa' },
+    { type: 'text_50ucik', obtained: 'text_60huii', expiry: 'text_70uzff' },
+    { type: 'text_51crhb', obtained: 'text_62hfpi', expiry: 'text_71ndqm' },
+    { type: 'text_52pedw', obtained: 'text_63grsw', expiry: 'text_72dmfk' },
+    { type: 'text_53bjo', obtained: 'text_64ecba', expiry: 'text_73vvyp' },
+    { type: 'text_54fdzf', obtained: 'text_65dqyz', expiry: 'text_74gxyx' },
+    { type: 'text_55mdiv', obtained: 'text_66vrbn', expiry: 'text_75cueg' },
+    { type: 'text_56tppq', obtained: 'text_67pust', expiry: 'text_76lyfv' },
+    { type: 'text_57jeig', obtained: 'text_68ljov', expiry: 'text_77dopc' }
+  ];
+
   const qualifications = formData.qualifications || [];
   for (let i = 0; i < Math.min(qualifications.length, 10); i++) {
-    const rowY = 375 - (i * 13.5);
-    drawText(3, qualifications[i].type, 60, rowY);
-    drawText(3, qualifications[i].dateObtained, 380, rowY);
-    drawText(3, qualifications[i].dateExpiry, 460, rowY);
+    setFieldText(qualFields[i].type, qualifications[i].type);
+    setFieldText(qualFields[i].obtained, qualifications[i].dateObtained);
+    setFieldText(qualFields[i].expiry, qualifications[i].dateExpiry);
   }
 
   // ==========================================
   // PAGE 4: SIGNATURES & DECLARATIONS
   // ==========================================
-  
+
   // 1. Sub-Contractor Training
-  drawText(4, formData.printedName1, 214, 550);
-  drawText(4, formData.dateSign1, 371, 550);
-  await drawSignature(4, signatures.training, 56, 528, 120, 30);
-  
+  setFieldText('text_79kjsd', formData.printedName1);
+  fillSplitDate(formData.dateSign1, 'text_80yfik', 'text_81qrcc', 'text_82pynq');
+  await drawSignature(4, signatures.training, 91, 547, 114, 23);
+
   // 2. Acceptance Handbook Policies
-  await drawSignature(4, signatures.handbook, 61, 380, 120, 30);
-  
+  await drawSignature(4, signatures.handbook, 102, 398, 124, 19);
+
   // 3. Tooling Requirements
-  await drawSignature(4, signatures.tooling, 63, 260, 120, 30);
-  
+  await drawSignature(4, signatures.tooling, 102, 279, 124, 19);
+
   // 4. Contractor Declaration
-  drawText(4, formData.printedName2, 214, 130);
-  drawText(4, formData.dateSign2, 371, 130);
-  await drawSignature(4, signatures.declaration, 56, 108, 120, 30);
-  
-  // Save PDF as bytes
+  setFieldText('text_86zoyh', formData.printedName2);
+  fillSplitDate(formData.dateSign2, 'text_87qcjo', 'text_88spuk', 'text_89ddqf');
+  await drawSignature(4, signatures.declaration, 92, 127, 107, 23);
+
+  // Save the modified PDF containing fillable fields
   const pdfBytesModified = await pdfDoc.save();
   return pdfBytesModified;
 }
