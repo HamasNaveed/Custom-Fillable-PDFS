@@ -129,36 +129,50 @@ export default function App() {
       const params = new URLSearchParams(window.location.search);
       const rawData = params.get('data');
       
-      if (rawData) {
-        const parsedData = JSON.parse(rawData);
-        const contractor = Array.isArray(parsedData) ? parsedData[0] : parsedData;
-        
-        setFormData((prev) => {
-          const updated = {
-            ...prev,
-            title: contractor.Title || prev.title,
-            firstName: contractor.GivenName || prev.firstName,
-            lastName: contractor.FamilyName || prev.lastName,
-            contactNumber: contractor.Phone || contractor.CellPhone || prev.contactNumber,
+      setFormData((prev) => {
+        let updated = { ...prev };
+
+        if (rawData) {
+          // Parse JSON format
+          const parsedData = JSON.parse(rawData);
+          const contractor = Array.isArray(parsedData) ? parsedData[0] : parsedData;
+          
+          updated = {
+            ...updated,
+            title: contractor.Title || updated.title,
+            firstName: contractor.GivenName || updated.firstName,
+            lastName: contractor.FamilyName || updated.lastName,
+            contactNumber: contractor.Phone || contractor.CellPhone || updated.contactNumber,
             homeAddress: contractor.Address
               ? `${contractor.Address.Address || ''}, ${contractor.Address.City || ''}`
                   .replace(/\r\n/g, ', ')
                   .trim()
-              : prev.homeAddress,
-            postcode: contractor.Address?.PostalCode || prev.postcode,
+              : updated.homeAddress,
+            postcode: contractor.Address?.PostalCode || updated.postcode,
           };
+        } else {
+          // Parse direct flat URL parameters
+          updated = {
+            ...updated,
+            title: params.get('title') || updated.title,
+            firstName: params.get('firstName') || params.get('first_name') || params.get('givenName') || updated.firstName,
+            lastName: params.get('lastName') || params.get('last_name') || params.get('familyName') || updated.lastName,
+            contactNumber: params.get('contactNumber') || params.get('phone') || params.get('cellPhone') || updated.contactNumber,
+            homeAddress: params.get('homeAddress') || params.get('address') || updated.homeAddress,
+            postcode: params.get('postcode') || params.get('postalCode') || updated.postcode,
+          };
+        }
 
-          // Auto-populate print names for signature section
-          const fullName = `${updated.firstName} ${updated.lastName}`.trim();
-          if (fullName) {
-            updated.printedName1 = fullName;
-            updated.printedName2 = fullName;
-          }
-          return updated;
-        });
-      }
+        // Auto-populate print names for signature section
+        const fullName = `${updated.firstName} ${updated.lastName}`.trim();
+        if (fullName) {
+          updated.printedName1 = fullName;
+          updated.printedName2 = fullName;
+        }
+        return updated;
+      });
     } catch (err) {
-      console.error("Failed to parse contractor URL data string:", err);
+      console.error("Failed to parse URL parameters:", err);
     }
   }, []);
 
