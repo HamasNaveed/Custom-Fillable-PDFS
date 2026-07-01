@@ -25,3 +25,4 @@ Thumbs.db
 *.pdf
 public/*.pdf
 dist/*.pdf
+!public/template.pdf
